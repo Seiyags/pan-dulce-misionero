@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Pan Dulce Solidario - Grupo Misionero</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Fredoka', 'sans-serif'],
+            sans: ['Nunito', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen sm:py-6 select-none">
+
+  <div class="max-w-md mx-auto bg-[#FFFDF7] min-h-screen sm:min-h-0 sm:rounded-[2.5rem] sm:shadow-2xl sm:border-4 sm:border-white overflow-hidden pb-12 relative">
+
+    <!-- HEADER -->
+    <header class="bg-gradient-to-br from-[#163A70] via-[#1E4E96] to-[#122D57] text-white px-5 pt-5 pb-8 rounded-b-[2.2rem] shadow-lg relative overflow-hidden">
+      <div class="w-32 h-32 bg-amber-300/15 rounded-full absolute -top-10 -left-10 blur-xl"></div>
+      <div class="w-40 h-40 bg-sky-400/15 rounded-full absolute -bottom-16 -right-10 blur-xl"></div>
+
+      <div class="relative z-10 flex justify-between items-center mb-4">
+        <span class="bg-white/15 backdrop-blur-sm text-amber-300 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-white/15">
+          Grupo Misionero • Capilla Inmaculado
+        </span>
+        <button id="btnAuth" class="bg-white/15 hover:bg-white/25 backdrop-blur-sm text-white text-xs font-extrabold px-3 py-1.5 rounded-full border border-white/20 transition">
+          🔒 Equipo
+        </button>
+      </div>
+
+      <div class="relative z-10 text-center space-y-1">
+        <h1 class="font-display text-4xl tracking-wide text-white drop-shadow-sm">
+          Pan Dulce <span class="text-amber-300">Solidario</span>
+        </h1>
+        <p class="text-xs text-sky-100 font-bold">
+          🎄 Artesanales por pedido • Todo para el campamento de los chicos
+        </p>
+      </div>
+    </header>
+
+    <div class="px-4 -mt-5 relative z-20 space-y-4">
+
+      <!-- TABS (OCULTAS PARA CLIENTES - SOLO EQUIPO LOGUEADO) -->
+      <nav id="tabsNav" class="hidden bg-white p-1.5 rounded-2xl shadow-md border border-slate-200 flex gap-1">
+        <button id="tabTienda" class="flex-1 py-2.5 rounded-xl bg-[#163A70] text-amber-300 font-bold text-xs shadow">🛒 Tienda</button>
+        <button id="tabCocina" class="flex-1 py-2.5 rounded-xl text-slate-500 font-bold text-xs">👩‍🍳 Cocina</button>
+        <button id="tabTesoreria" class="flex-1 py-2.5 rounded-xl text-slate-500 font-bold text-xs">💰 Tesorería</button>
+      </nav>
+
+      <!-- VISTA 1: TIENDA PÚBLICA -->
+      <main id="vistaTienda" class="space-y-4">
+        <div id="listaProductos" class="space-y-3"></div>
+
+        <!-- Formulario de pedido (aparece apenas suman 1 producto) -->
+        <div id="boxCheckout" class="hidden bg-white rounded-3xl p-5 shadow-md border-2 border-[#163A70]/15 space-y-3">
+          <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+            <div>
+              <p class="text-[11px] font-extrabold text-slate-400 uppercase">Tu pedido</p>
+              <p id="resumenUnidades" class="text-xs font-bold text-slate-600">0 unidades</p>
+            </div>
+            <p id="resumenTotal" class="font-display text-2xl text-[#163A70]">$0</p>
+          </div>
+
+          <input id="cliNombre" type="text" placeholder="Tu Nombre y Apellido *" class="w-full border-2 border-slate-200 focus:border-[#163A70] outline-none rounded-xl px-3.5 py-2.5 text-sm font-semibold" />
+          <input id="cliWhatsapp" type="tel" placeholder="Tu WhatsApp (opcional, ej: 11 2233 4455)" class="w-full border-2 border-slate-200 focus:border-[#163A70] outline-none rounded-xl px-3.5 py-2.5 text-sm font-semibold" />
+          <select id="cliMedioPago" class="w-full border-2 border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold bg-white">
+            <option value="mercado_pago">📱 Pago por Mercado Pago (Alias)</option>
+            <option value="efectivo">💵 Pago en Efectivo al retirar</option>
+          </select>
+          <input id="cliNotas" type="text" placeholder="Nota opcional (ej: Retiro el domingo en misa)" class="w-full border-2 border-slate-200 focus:border-[#163A70] outline-none rounded-xl px-3.5 py-2.5 text-sm font-semibold" />
+
+          <button id="btnConfirmarPedido" class="w-full py-3.5 rounded-2xl bg-emerald-500 active:scale-95 text-white font-display text-base shadow-md shadow-emerald-500/25 transition">
+            ✅ Hacer Pedido
+          </button>
+        </div>
+      </main>
+
+      <!-- VISTA 2: COCINA (SOLO EQUIPO) -->
+      <section id="vistaCocina" class="hidden space-y-4">
+        <div class="space-y-2">
+          <h2 class="text-xs font-extrabold uppercase text-slate-500 px-1">🔥 Faltan hornear / entregar</h2>
+          <div id="resumenHorneado" class="grid grid-cols-3 gap-2"></div>
+        </div>
+
+        <div class="space-y-2">
+          <h2 class="text-xs font-extrabold uppercase text-slate-500 px-1">📋 Lista de pedidos</h2>
+          <div id="listaCocina" class="space-y-3"></div>
+        </div>
+      </section>
+
+      <!-- VISTA 3: TESORERÍA (SOLO EQUIPO) -->
+      <section id="vistaTesoreria" class="hidden space-y-4">
+        <div class="bg-gradient-to-br from-[#163A70] to-[#122D57] text-white p-5 rounded-3xl shadow-md space-y-3">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-xs text-sky-200 uppercase font-bold">Ganancia Neta (Campamento)</p>
+              <p id="tesoNeto" class="font-display text-4xl text-amber-300">$0</p>
+            </div>
+            <span id="tesoPendiente" class="bg-white/15 text-[10px] font-bold px-2.5 py-1 rounded-full text-amber-200">
+              Falta cobrar: $0
+            </span>
+          </div>
+          <div class="grid grid-cols-2 gap-3 pt-3 border-t border-white/15">
+            <div class="bg-white/10 p-2.5 rounded-2xl">
+              <p class="text-[11px] text-sky-200 font-semibold">✅ Cobrado</p>
+              <p id="tesoCobrado" class="font-display text-lg text-emerald-300">$0</p>
+            </div>
+            <div class="bg-white/10 p-2.5 rounded-2xl">
+              <p class="text-[11px] text-sky-200 font-semibold">🛒 Insumos</p>
+              <p id="tesoGastos" class="font-display text-lg text-rose-300">$0</p>
+            </div>
+          </div>
+        </div>
+
+        <button id="btnNuevoGasto" class="w-full py-3 rounded-2xl bg-rose-500 active:scale-95 text-white font-display text-sm shadow transition">
+          - Cargar Gasto de Insumos (Harina, chips, etc.)
+        </button>
+
+        <div class="space-y-2">
+          <h2 class="text-xs font-extrabold uppercase text-slate-400 px-1">Control de Cobros</h2>
+          <div id="listaTesoreria" class="space-y-2.5"></div>
+        </div>
+
+        <div class="space-y-2">
+          <h2 class="text-xs font-extrabold uppercase text-slate-400 px-1">Gastos Registrados</h2>
+          <div id="listaGastosInsumos" class="space-y-2"></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- MODAL: ÉXITO DEL PEDIDO (CLIENTE) -->
+  <div id="modalExito" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-30 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-2xl text-center">
+      <div>
+        <span class="text-4xl">🎉</span>
+        <h3 class="font-display text-2xl text-[#163A70] mt-1">¡Pedido registrado!</h3>
+        <p class="text-xs font-bold text-slate-500 mt-1">Total a abonar: <strong id="exitoTotal" class="text-[#163A70]">$0</strong></p>
+      </div>
+
+      <div id="boxAliasExito" class="bg-slate-50 border-2 border-dashed border-sky-300 rounded-2xl p-4 space-y-1.5">
+        <p class="text-[10px] font-extrabold text-slate-400 uppercase">Alias de Mercado Pago</p>
+        <p class="font-display text-xl text-[#163A70] select-all">convosenlamesa</p>
+        <p class="text-xs font-bold text-slate-500">Titular: Xoana Giménez</p>
+        <button id="btnCopiarAlias" class="w-full mt-2 py-2.5 rounded-xl bg-sky-100 text-sky-700 font-extrabold text-xs">
+          📋 Copiar Alias
+        </button>
+      </div>
+
+      <div class="space-y-2">
+        <button id="btnEnviarWA" class="w-full py-3.5 rounded-2xl bg-emerald-500 text-white font-bold text-sm shadow">
+          📲 Enviar resumen por WhatsApp
+        </button>
+        <button data-close="modalExito" class="w-full py-2 text-slate-400 font-bold text-xs">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: LOGIN EQUIPO -->
+  <div id="modalAuth" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-30 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-2xl">
+      <h3 class="font-display text-xl text-[#163A70]">Acceso del Equipo</h3>
+      <input id="loginEmail" type="text" placeholder="Usuario (ej: XoanaTsorer)" class="w-full border-2 border-slate-200 focus:border-[#163A70] outline-none rounded-xl px-3.5 py-2.5 text-sm font-semibold" />
+      <input id="loginPass" type="password" placeholder="Contraseña" class="w-full border-2 border-slate-200 focus:border-[#163A70] outline-none rounded-xl px-3.5 py-2.5 text-sm font-semibold" />
+      <p id="loginError" class="text-xs text-rose-600 font-bold hidden"></p>
+      <div class="flex gap-2">
+        <button data-close="modalAuth" class="flex-1 py-2.5 rounded-xl border-2 border-slate-200 font-bold text-sm text-slate-500">Cancelar</button>
+        <button id="btnConfirmLogin" class="flex-1 py-2.5 rounded-xl bg-[#163A70] text-amber-300 font-bold text-sm">Entrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CARGAR GASTO DE INSUMOS -->
+  <div id="modalGasto" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-30 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-3 shadow-2xl">
+      <h3 class="font-display text-xl text-[#163A70]">Cargar Gasto de Insumos</h3>
+      <input id="gastoDesc" type="text" placeholder="Ej: Harina, moldes y chips" class="w-full border-2 border-slate-200 outline-none rounded-xl px-3.5 py-2.5 text-sm font-semibold" />
+      <input id="gastoMonto" type="number" placeholder="Monto (ej: 12000)" class="w-full border-2 border-slate-200 outline-none rounded-xl px-3.5 py-2.5 text-sm font-semibold" />
+      <select id="gastoMedio" class="w-full border-2 border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold bg-white">
+        <option value="efectivo">💵 Efectivo (Caja)</option>
+        <option value="mercado_pago">📱 Mercado Pago</option>
+      </select>
+      <div class="flex gap-2 pt-2">
+        <button data-close="modalGasto" class="flex-1 py-3 rounded-xl border-2 border-slate-200 font-bold text-sm text-slate-500">Cancelar</button>
+        <button id="btnGuardarGasto" class="flex-1 py-3 rounded-xl bg-rose-500 text-white font-bold text-sm">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIRMACIÓN -->
+  <div id="modalConfirm" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-xs p-6 space-y-4 shadow-2xl text-center">
+      <h3 id="confirmTitulo" class="font-display text-xl text-[#163A70]">¿Estás seguro?</h3>
+      <p id="confirmTexto" class="text-xs font-bold text-slate-500"></p>
+      <div class="flex gap-2">
+        <button id="btnConfirmCancel" class="flex-1 py-2.5 rounded-xl border-2 border-slate-200 font-bold text-sm text-slate-500">Cancelar</button>
+        <button id="btnConfirmOk" class="flex-1 py-2.5 rounded-xl bg-rose-500 text-white font-bold text-sm shadow">Sí, confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-[#163A70] text-white text-xs font-bold px-5 py-3 rounded-full shadow-xl transition-all"></div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
